@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<!-- Author: Stephen Cassaro
+     Company: Dasan Zhone Solutions
+     Description: Page that allows you to simply download binaries to your MX/MXK/MXKF system to update it, or select specific binaries to add while simultaneously upgrading.
+-->
+<meta content="text/html;charset=utf-8" http-equiv="Content-Type">
+<meta content="utf-8" http-equiv="encoding">
+<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.8.3/jquery.min.js"></script>
+<html>
+  <head><title>MXK Updater</title>
+  <body>
+    <!-- Table for containing the side navigation bar and other assorted page widgets -->
+    <table width="100%" cellspacing="5" border="0">
+      <tbody>
+	<tr>
+	  <!-- Zhone logo. -->
+	  <td colspan="2">
+	    <a href="http://rtlwiki.test.zhone.com/rtlwiki/">
+	      <img src="http://intra.zhone.com/images/header_logo_popup.gif" border="0">
+	    </a>
+	  </td>
+	</tr>
+	<tr>
+	  <!-- Side Nav bar. I copied this from Mike's pages, I was too lazy to implement templating, but might do so in the future. Compressed to save space. -->
+	    <td valign="top" bgcolor="#33cccc"><table width="140"><tbody><tr bgcolor="Blue"><td>Menu</td></tr><tr><td width="120" valign="top"><font size="-1"><a href="http://rtlwiki.test.zhone.com/rtlwiki/">RTL Wiki</a></font></td></tr><tr><td width="120" valign="top"><font size="-1"><a href="http://rtlauto.test.zhone.com/cgi-bin/common/rtlLayout.cgi">New RTL Automation Site</a></font></td></tr><tr><td width="120" valign="top"><font size="-1"><a href="http://xx2.test.zhone.com/cgi-bin/common/rtlLayout.cgi">Modem Configuration Home</a></font></td></tr><tr><td width="120" valign="top"><font size="-1"><a href="http://intra.zhone.com/~mhiggins/line-test/">Line Test Data</a></font></td></tr></tbody></table></td>
+	    <!-- Page title -->
+	  <td width="90%" valign="top" align="left">
+	    <h3>
+	      Select which binaries you would like to add.
+	    </h3>
+	    <hr>
+	    <!-- Table for containing updater. --> 
+	    <table width="50%" border="0" align="left">
+	      <tbody>
+		<tr>
+		  <td align="center">
+		  </td>
+		</tr>
+		<tr>
+		  <td align="left">
+		    <!-- This is the form for just updating, no selecting individual binaries. It takes IP and Version as string and passes them to index.py (which I should RENAME), which does the actual updating. Very simple. --> 
+		      <!-- Send values to Python CGI script. This gets hidden later if user chooses to select binaries instead to avoid confusion. May change later as this is inelegant. -->
+		      <!-- This is a small javascript function that makes the "update starting" dialog appear. Possible will implement a status bar/page at a later date. -->
+		    
+		    <!-- Update starting dialog that is triggered by the update button. -->
+
+		    
+		    <!-- This is the Select Binaries button. It reveals a set of checkboxes based on the user's choice of MX/MXK/MXKF software in the IP of MXK field. -->
+		      
+		    
+		      
+		    
+		    <!--script type="text/javascript"-->
+		    
+		    <!-- Div containing the checkboxes. Starts as hidden until the user has entered a "valid" IP and software load (its very dumb, as seen later in the code, does not do much validation.) -->
+		    <form action="/update.py">
+		      IP of MXK <input type="text" id="IP" name="IP"><br><br>
+		      <!-- Store version of MXK software to upgrade system to. -->
+		      Version to upgrade to <input type="text" id="version" name="version"><br><br>
+		      <input type="checkbox" name="GA" value="true">GA Release Build<br>
+		      <input type="checkbox" name="reboot" value="true" checked>Reboot?<br><br> 
+		      <input type="submit" value="Update" id="updateadd">
+		      <input type="button" value="Select Binaries" id="selectbins">
+		      <div id="checkboxtable" style="display:none;">
+			<script type="text/javascript">
+		    
+			 $('#selectbins').click(function () {
+			     var IP = $('#IP').val()
+			     var version = $('#version').val()
+			     var existingbins = ""
+			     if(IP != null && version != null){
+				 $.ajax({
+				     type: "POST",
+				     url: "getbins.py",
+				     data: "IP=" + IP + "&version=" + version,
+				     success: function(data) {
+					 
+					 var OneUArray = ["mx1u160lt_http.tar", "mx1ux60vect_http.tar", "mx1U19x/mx1u19x.bin", "mx1u180ge_http.tar", "mx1ux80_http.tar", "mx1Ux5x/mx1ux5x.bin", "mx1u19x_http.tar", "mx1U108/mx1u108.bin", "mx1Ux60/mx1ux60.bin", "mx1ux5x_http.tar", "mx1U160Lt/mx1u160lt.bin", "mx1Ux60Vect/mx1ux60vect.bin", "mx1ux60_http.tar", "mx1U180Ge/mx1u180ge.bin", "mx1Ux80/mx1ux80.bin"]
+					 var MXKArray = ["/Iskratel-mxk819_http.tar", "mxLc2Tg8gAe/mxlc2tg8gae.bin", "mxUp4G/mxup4g.bin", "mxk319_http.tar", "mxLc48Vdsl2/mxlc48vdsl2.bin", "mxUp4GCopper/mxup4gcopper.bin", "mxk819_http.tar", "mxLc48aAdslBond/mxlc48aadslbond.bin", "mxUp4GCopperRAW/mxup4gcopperraw.bin", "mxk823_http.tar", "mxLc48bAdslBond/mxlc48badslbond.bin", "mxUp4GRAW/mxup4graw.bin", "mtacRing/mtacring.bin", "mxLc4Gp/mxlc4gp.bin", "mxUp6G/mxup6g.bin", "mtacRingFc/mtacringfc.bin", "mxLc72Pots/mxlc72pots.bin", "mxUp6GRAW/mxup6graw.bin", "mxLc20Ae/mxlc20ae.bin", "mxLc72aAdslBond/mxlc72aadslbond.bin", "mxUp8G/mxup8g.bin", "mxLc20Ae1S/mxlc20ae1s.bin", "mxLc8Gp/mxlc8gp.bin", "mxUp8GRAW/mxup8graw.bin", "mxLc20Ae1SCsfp/mxlc20ae1scsfp.bin", "mxLc8Gp3/mxlc8gp3.bin", "mxUp8Gf/mxup8gf.bin", "mxLc24GshdslBond/mxlc24gshdslbond.bin", "mxLcOc3Stm1Pwe/mxlcoc3stm1pwe.bin", "mxUp8GfRAW/mxup8gfraw.bin", "mxLc24T1E1Bond/mxlc24t1e1bond.bin", "mxUp2Tg8g/mxup2tg8g.bin", "tac/tac.bin", "mxLc24T1E1Pwe/mxlc24t1e1pwe.bin", "mxUp2Tg8gRAW/mxup2tg8graw.bin", "tacFc/tacfc.bin", "mxLc24UlcS/mxlc24ulcs.bin", "mxUp2Tg8gTop/mxup2tg8gtop.bin", "tacItmRing/tacitmring.bin", "mxLc24Vdsl2/mxlc24vdsl2.bin", "mxUp2Tg8gTopRAW/mxup2tg8gtopraw.bin", "tacItmRingFc/tacitmringfc.bin", "mxLc24Vdsl2Pots/mxlc24vdsl2pots.bin", "mxUp2Tg8gf/mxup2tg8gf.bin", "tacRing/tacring.bin", "mxLc24Vdsl2Pots2/mxlc24vdsl2pots2.bin", "mxUp2Tg8gfRAW/mxup2tg8gfraw.bin", "tacRingFc/tacringfc.bin"]
+					 var MXKFArray= ["mxkFcAe/mxkfcae.bin", "mxkLcAeTg/mxklcaetg.bin", "mxkLcGp3/mxklcgp3.bin", "mxkLcGp3RAW/mxklcgp3raw.bin", "mxkLcAe/mxklcae.bin", "mxkLcGp/mxklcgp.bin", "mxkMc/mxkmc.bin", "mxkLcGp5/mxklcgp5.bin", "mxkLcGp5RAW/mxklcgp5raw.bin", "mxkLcNgpS16/mxklcngps16.bin", "mxkLcNgpS16RAW/mxklcngps16raw.bin", "mxkLcNgpS2A4/mxklcngps2a4.bin", "mxkLcNgpS2A4RAW/mxklcngps2a4raw.bin"]
+					 var existingbins = data.split("|")
+					 var badversion = false
+					 $("#ajaxresults").html("<p>" + existingbins[0] + "</p>");
+					 MXArrayToUse = []
+					 if(IP != null && version != null){
+					     if(exisitingbins[1] == "MXK"){
+						 if(version[0] == 3){
+						     MXArrayToUse = MXKFArray
+						 }
+						 else if(version[0] == 2){
+						     MXArrayToUse = MXKArray
+						 }
+					     }
+					     else if(existingbins[1] == "MX"){
+						 MXArrayToUse = OneUArray
+					     }
+					     else{
+						 $("#checkboxes").html("<p>No binaries for that load found. Please ensure you have entered a correct software load and try again.</p>")
+						 badversion = true
+					     }
+					 }
+					 else if(IP == null){
+					     $("#checkboxes").html("<p>IP field cannot be blank.</p>")
+					 }
+					 else if(version == null){
+					     $("#checkboxes").html("<p>Version field cannot be blank.</p>")
+					 }
+					 else{
+					     $("#checkboxes").html("<p>Both fields must contain values.</p>")
+					 }
+					 if(badversion == false){
+					     var checkboxdata = "<tbody>"
+					     for(var i = 0; i < MXArrayToUse.length; i++){
+						 if(i == 0 || i % 3 == 0){
+						     checkboxdata += "<tr>"
+						 }
+						 checkboxdata += "<td><input name='binFileList' value='" + MXArrayToUse[i] + "' type='checkbox'"
+						 for(j = 0; j < existingbins.length; j++){
+						     if(existingbins[j].trim() == MXArrayToUse[i].trim()){
+							 checkboxdata += " checked"
+						     }
+						 }
+						 checkboxdata += "></td><td>" + MXArrayToUse[i] + "</td>"    
+						 if((i-2) == 0 || (i-2) % 3 == 0)
+						     checkboxdata += "</tr>"
+					     }
+					     checkboxdata += "<br><br></tbody>"
+					     $("#checkboxes").html(checkboxdata);
+					 }
+					 $('#checkboxtable').show();
+				     }
+				 });
+			     }
+			 });
+			</script>
+			<br>
+			</div>
+		  <span id="checkboxes"></span>
+
+		</form>
+
+		    <script type="text/javascript">
+		       $('#updateadd').click(function() {
+			   $('#updatestart').show();
+		       });
+		    </script>
+		    <script type="text/javascript">
+		       $('#selectbins').click(function() {
+			   $('#updatestart').hide();
+		       });
+		      </script>
+		<br>
+		<div id="updatestart" style="display: none;">Update has started. Please wait...</div>
+		<br>
+		  </td>
+		</tr>
+	      </tbody>
+	      <tr>
+		<h><b><strong>Instructions:</strong></b></h>
+		<p>Selecting binaries takes about 40 seconds on average. The release server is unfortunately very slow, give it some time and it will update the page with checkboxes when its ready. If no binaries appear checked, your system likely does not have a working network connection.</p>
+		<p>Updates your system based on binaries in the system, not slots.</p>
+		<p>Remember to updateuser admin and set debug to yes.</p>
+		</tr>
+	    </table>
+	  </td>
+	</tr>
+	<!-- Footer Junk, compressed to one line to save space. -->
+	<tr><td colspan="2" align="center"><br><hr><table width="100%"><tbody><tr><td align="left"><a href="http://www.ubuntulinux.org/"><img src="https://assets.ubuntu.com/v1/ad9a02ac-ubuntu-orange.gif" border="0" align="left"></a></td><td align="center"><div align="center"><font size="-1" color="#023264">Copyright 2018 Dasan Zhone Solutions</font></div></td><td align="right"><a href="http://www.apache2.org/"><img src="/icons/apache_pb2.gif" border="0" align="right"></a></td></tr></tbody></table></td></tr></tbody></table>
+</body>
+</html>

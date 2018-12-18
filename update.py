@@ -31,7 +31,7 @@ print("<tr><th>File Download String</th><th>Result</th></tr>")
 # binname = Zhone MX/MXK binary name.
 # chassistype = Either MX or MXK.
 # version = Software version we wish to upgrade to.
-def CreateFolder(binname, chassistype, version):
+def CreateFolder(binname, chassistype, version, frostsymlink):
        # Telnet to Frost (server that holds the binaries).
        frosttelnet = telnetlib.Telnet("172.16.41.193")
        
@@ -43,7 +43,8 @@ def CreateFolder(binname, chassistype, version):
        frosttelnet.read_until(b"-bash-3.00$")
        
        # Use the Unix "find" command to get the path to the binary.
-       findfolder = "find dl/" + chassistype + "_" + version + " -name '" + binname + "'\n"
+       # dl/ is used in non-GA loads, gadl/ used otherwise.
+       findfolder = "find " + frostsymlink + chassistype + "_" + version + " -name '" + binname + "'\n"
        frosttelnet.write(findfolder.encode('ascii'))
        
        # The find command above gives too much info.
@@ -134,7 +135,7 @@ def SelectBinsUpdate(binary, downloadstring, flashstring, generation):
        return flashstring, downloadstring
 
 # This function hadles a standard update, where all binaries in "dir" are updated.
-def StandardUpdate(binary, downloadstring, version, chassistype, flashstring, generation):
+def StandardUpdate(binary, downloadstring, version, chassistype, flashstring, generation, frostsymlink):
        
        # If the file has ".tar" in its name, and is not a tar which might be a backup,
        if(binary[-4:] == ".tar"):
@@ -146,7 +147,7 @@ def StandardUpdate(binary, downloadstring, version, chassistype, flashstring, ge
        if(binary[-4:] == ".bin" and binary[-7:] != "rom.bin" and binary[-5:] != "_.bin"):
               
               # complete the download string by calling CompleteFolder to get folder path and adding the binary name and Zhone system syntax.
-              downloadstring += CreateFolder(binary, chassistype, version) + " /card1/" + binary + "\n\r"
+              downloadstring += CreateFolder(binary, chassistype, version, frostsymlink) + " /card1/" + binary + "\n\r"
               
               # If the binary is a RAW file and the device is an MXK Classic,
               if(binary[-7:] == "raw.bin" and generation == "Classic"):
@@ -162,12 +163,30 @@ def FlashRebootandClose(flashstring, mxktelnet, prompt, form):
        # If the flash string exists,
        if(flashstring != ""):
               
-              # write flash string to the telnet object, go through Zhone validation, and print it to the results page.
+              # write flash string to the telnet object,
               mxktelnet.write(flashstring.encode('ascii'))
+
+              # go through Zhone validation,
               mxktelnet.read_until(b"Continue? (yes or no) [no]")
               mxktelnet.write(b"yes\r")
-              mxktelnet.read_until(prompt)
-              print(flashstring)
+
+              # and print it to the results page.
+              print("<tr><td>" + flashstring + "</td>")
+
+              # Analyze output from flash command.
+              flashsuccess = (mxktelnet.read_until(prompt).decode('ascii')).split()
+
+              # If the flashing worked,
+              if(flashsuccess[len(flashsuccess)-2] == "successful"):
+
+                     # print success,
+                     print("<td style='color:green'>Success</td>")
+
+              # otherwise,
+              else:
+
+                     # print failed.
+                     print("<td style='color:red'>Failed</td>")
        
        # If the user indicated they would like to reboot,
        if(form.getvalue('reboot') == 'true'):
@@ -194,6 +213,13 @@ def main():
        # Blank flash string for returning if there isn't any RAW that needs flashing.
        flashstring = ""
 
+       # Variable to store frost symlink string.
+       # The frost symlink string is used in the frost release server to download files and determine folders for binaries.
+       if(form.getvalue('GA') == "true"):
+              frostsymlink = "gadl/"
+       else:
+              frostsymlink = "dl/"
+
        # Telnet to system, login, and create login string.
        mxktelnet, prompt = TelnetLoginandGetPrompt(form.getvalue('IP'))
 
@@ -208,10 +234,8 @@ def main():
               
               # Write "dir" to the telnet,
               mxktelnet.write(b"dir\r\n")
-              #time.sleep(1)
               
               # extract the return value for use in parsing binary names.
-              #dirarray = (mxktelnet.read_very_eager().decode('ascii')).split()
               dirarray = (mxktelnet.read_until(prompt).decode('ascii')).split()
               
        # Run DetermineChassisType to figure out if its a 1U or MXK (nogen says to return just MX or MXK).
@@ -224,25 +248,29 @@ def main():
               binary = dirarray[i]
               
               # Create beginning part of the download string.
-              downloadstring = "ftp user scassaro pass Passw0rd 172.16.41.193 get-bin dl/" + chassistype  + "_" + form.getvalue('version') + "/"
-
+              downloadstring = "ftp user scassaro pass Passw0rd 172.16.41.193 get-bin " + frostsymlink + chassistype  + "_" + form.getvalue('version') + "/"
+              
               # If user selected their own binaries, run SelectBinsUpdate,
               if("binFileList" in form):
                      flashstring, downloadstring = SelectBinsUpdate(binary, downloadstring, flashstring, generation)
                      
               # otherwise run StandardUpdate.
               else:
-                     flashstring, downloadstring = StandardUpdate(binary, downloadstring, form.getvalue('version'), chassistype, flashstring, generation)
+                     flashstring, downloadstring = StandardUpdate(binary, downloadstring, form.getvalue('version'), chassistype, flashstring, generation, frostsymlink)
 
               # Valid but not released binaries were causing issues, so I put this check to throw error messages.
-              # MAKE MORE VERBOSE LATER.
+              # If "directory" is found in the download string (means a "directory not found" error occurred),
               if(downloadstring.find("directory") > -1):
+
+                     # split the download string into an array of strings,
                      splitdownloadstring = downloadstring.split()
+
+                     # and print the error message.
                      print("<tr><td>No " + (splitdownloadstring[len(splitdownloadstring)-1])[7:] + " found for " + form.getvalue('version') + ".</td><td style='color:red'>Failed</td></tr>")
 
               # Essentially, if a standard update is chosen, there will be a "/" at the end of the downloadstring if the analyzed dir string is not a binary.
               # This "if" statement is meant to catch the not binary situation.
-              if(downloadstring[len(downloadstring)-1] != "/" and downloadstring.find("directory") < 0):
+              if(downloadstring[len(downloadstring)-1] != "/"): # and downloadstring.find("directory") < 0):
                      
                      # Write the download string to the telnet if the dir string is a valid binary, or always write if bins were selected manually, separating into paragraphs.
                      mxktelnet.write(downloadstring.encode('ascii'))
